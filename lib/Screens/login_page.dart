@@ -22,18 +22,30 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> login() async {
     try {
+
+      showLoadingDialog(context, "Logging in...");
+
       await auth.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
+      Navigator.pop(context);
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+        (route) => false,
+      );
+
+      /*
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage())
       );
-      
+      */ 
     }
 
     catch (error) {
@@ -43,6 +55,25 @@ class _LoginPageState extends State<LoginPage> {
         errorMessage = error.toString();
       }
     }
+  }
+
+  void showLoadingDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        child: Padding(
+          padding: const EdgeInsetsGeometry.all(20),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Text(message),
+            ],
+          )),
+      ),
+    );
   }
 
   /*void loginUser(BuildContext context) {

@@ -46,9 +46,7 @@ class _HomePageState extends State<HomePage> {
               }
 
               else if (value == 'Log out') {
-                Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (logout) => LoginPage()),
-                );  
+                logout(context); 
               }
               debugPrint(value);
             },

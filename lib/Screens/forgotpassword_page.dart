@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -8,10 +9,27 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-
+  final FirebaseAuth auth = FirebaseAuth.instance;
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController codeController = TextEditingController();
+  String ? errorMessage;
+
+  Future<void> resetPassword(String email) async {
+    try {
+      if (email.trim().isEmpty) {
+        errorMessage = "Enter valid email...";
+      }
+      await auth.sendPasswordResetEmail(email: email.trim());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password reset email sent!")),
+      );
+    }
+    catch (e) {
+      print(e.toString());
+    }
+  }
   
+   
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +104,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),                      
                           ),
 
-                          const SizedBox(height: 20),
-                  
+                          const SizedBox(height: 0),
+                          /*
                           TextFormField(
                             obscureText: true,
                             controller: codeController,
@@ -121,19 +139,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               )
                             ),
                           ),
-                        
+                          */
                           SizedBox(height: 20),
 
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              fixedSize: Size(80, 15),
+                              backgroundColor: Colors.red,
+                              fixedSize: Size(120, 15),
                               padding: EdgeInsets.all(0.5)
                             ),
-                            onPressed: () {},
-                            child: Text('GET CODE',
+                            onPressed: () {
+                              resetPassword(emailController.text);
+                            },
+                            child: Text('RESET PASSWORD',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: Colors.white,
                               fontSize: 12,
                             ))
                           )

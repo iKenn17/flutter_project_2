@@ -28,21 +28,48 @@ class _SignupPageState extends State<SignupPage> {
         errorMessage = "Passwords do not match";
         return;
       }
+
+      showLoadingDialog(context, "Signing up...");
+
       await auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(), 
         password: passwordController.text.trim(),
       );
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginPage()));
-        }
+
+      Navigator.pop(context);
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+        (route) => false,
+      );
+
     }
 
     catch (error) {
       errorMessage = error.toString();
     }
   }
+
+  void showLoadingDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        child: Padding(
+          padding: const EdgeInsetsGeometry.all(20),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Text(message),
+            ],
+          )),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
