@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import 'profile_page.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,8 +12,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final FirebaseAuth auth = FirebaseAuth.instance;
   List<Task> tasks = [];
   DateTime? reminderDate;
+
+  Future<void> logout(BuildContext context) async {
+    await auth.signOut();
+
+    if (mounted) {
+      setState(() {
+        Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }); 
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +38,24 @@ class _HomePageState extends State<HomePage> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: (String value) {
+              if (value == 'Profile') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+              }
+
+              else if (value == 'Log out') {
+                Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (logout) => LoginPage()),
+                );  
+              }
               debugPrint(value);
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
-                value: 'User',
-                child: Text('Users'),
+                value: 'Profile',
+                child: Text('Profile'),
               ),
               const PopupMenuItem<String>(
                 value: 'Settings',
@@ -118,6 +146,7 @@ class _HomePageState extends State<HomePage> {
                                   const Text(
                                     "Quest",
                                     style: TextStyle(
+                                      color: Colors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -126,7 +155,12 @@ class _HomePageState extends State<HomePage> {
                                   TextField(
                                     controller: titleController,
                                     decoration: InputDecoration(
+                                      isDense: true,
                                       hintText: "Enter Title...",
+                                      hintStyle: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                      ),
                                       filled: true,
                                       fillColor:
                                           const Color.fromARGB(255, 204, 193, 177),
@@ -142,6 +176,10 @@ class _HomePageState extends State<HomePage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          fixedSize: Size(120,20),
+                                          padding: EdgeInsets.all(5)
+                                        ),
                                         onPressed: () async {
                                           DateTime? date = await showDatePicker(
                                             context: context,
@@ -168,13 +206,19 @@ class _HomePageState extends State<HomePage> {
                                             }
                                           }
                                         },
-                                        child: const Text("Add Reminder"),
+                                        child: const Text("Add Reminder",
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 12,
+                                        ),),
                                       ),
+
+                                      SizedBox(width: 30),
+
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color.fromARGB(255, 40, 33, 31),
-                                          foregroundColor: Colors.white,
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.blue,
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(20),
@@ -194,7 +238,10 @@ class _HomePageState extends State<HomePage> {
                                             Navigator.pop(context);
                                           }
                                         },
-                                        child: const Text("Add Task"),
+                                        child: const Text("Add Task",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                        ),),
                                       ),
                                     ],
                                   )

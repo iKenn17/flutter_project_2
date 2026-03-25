@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "232979945221",
+    "project_id": "questifie-app",
+    "storage_bucket": "questifie-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232979945221:android:11715f7ae0c20818bf496c",
+        "android_client_info": {
+          "package_name": "com.example.questifie_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxcTmfXvcPdXpHYv3fBHW2wloEPQ-AY4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
