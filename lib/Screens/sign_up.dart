@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
@@ -12,7 +13,9 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
 
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmedpasswordController = TextEditingController();
@@ -23,33 +26,47 @@ class _SignupPageState extends State<SignupPage> {
   
 
   Future<void> signup() async {
-    try {
-      if (passwordController.text.trim() != confirmedpasswordController.text.trim()) {
+  try {
+    if (passwordController.text.trim() != confirmedpasswordController.text.trim()) {
+      setState(() {
         errorMessage = "Passwords do not match";
-        return;
-      }
-
-      showLoadingDialog(context, "Signing up...");
-
-      await auth.createUserWithEmailAndPassword(
-        email: emailController.text.trim(), 
-        password: passwordController.text.trim(),
-      );
-
-      Navigator.pop(context);
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-        (route) => false,
-      );
-
+      });
+      return;
     }
 
-    catch (error) {
+    showLoadingDialog(context, "Signing up...");
+
+    UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    
+    await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+      'name': nameController.text.trim(),
+      'email': emailController.text.trim(),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    
+    await userCredential.user!.updateDisplayName(nameController.text.trim());
+
+    Navigator.pop(context);
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (route) => false,
+    );
+
+  } catch (error) {
+    Navigator.pop(context);
+    setState(() {
       errorMessage = error.toString();
-    }
+    });
   }
+}
+
 
   void showLoadingDialog(BuildContext context, String message) {
     showDialog(
@@ -110,6 +127,43 @@ class _SignupPageState extends State<SignupPage> {
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                       child: Column(
                         children: [
+
+                          TextFormField(
+                            controller: nameController,
+                            keyboardType: TextInputType.name,
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(10),
+                              isDense: true,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(36),
+                                borderSide: BorderSide(
+                                  color: Colors.white,
+                                )
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(36),
+                                borderSide: BorderSide(
+                                  color: Colors.white
+                                )
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Enter Name...',
+                              hintStyle: TextStyle(
+                                color: Colors.black,
+                                fontSize: 14
+                              ),
+                              prefixIcon: Icon(Icons.person,
+                              color: Colors.black,
+                              size: 20,),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(36)
+                              )
+                            ),                      
+                          ),
+
+                          const SizedBox(height: 20),
+                          
                           TextFormField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,

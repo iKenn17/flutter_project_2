@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 import 'profile_page.dart';
-import 'login_page.dart';
+import 'settings_page.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,21 +14,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
   List<Task> tasks = [];
   DateTime? reminderDate;
-
-  Future<void> logout(BuildContext context) async {
-    await auth.signOut();
-
-    if (mounted) {
-      setState(() {
-        Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => LoginPage()),
-        );
-      }); 
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,31 +30,30 @@ class _HomePageState extends State<HomePage> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: (String value) {
-              if (value == 'Profile') {
+              if (value == 'User') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ProfilePage()),
                 );
               }
-
-              else if (value == 'Log out') {
-                logout(context); 
+              else if (value == 'Settings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
               }
               debugPrint(value);
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
-                value: 'Profile',
-                child: Text('Profile'),
+                value: 'User',
+                child: Text('User'),
               ),
               const PopupMenuItem<String>(
                 value: 'Settings',
                 child: Text('Settings'),
               ),
-              const PopupMenuItem<String>(
-                value: 'Log out',
-                child: Text('Log out'),
-              ),
+              
             ],
           ),
         ],
