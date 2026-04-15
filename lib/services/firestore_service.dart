@@ -8,7 +8,6 @@ class FirestoreService {
   
   Future<void> addTask(String title, DateTime? reminder) async {
   final user = FirebaseAuth.instance.currentUser;
-
   await FirebaseFirestore.instance
       .collection('users')
       .doc(user!.uid)
@@ -16,6 +15,7 @@ class FirestoreService {
       .add({
     'title': title,
     'reminder': reminder != null ? Timestamp.fromDate(reminder) : null,
+    'isDone': false,
     'createdAt': Timestamp.now(),
   });
 }

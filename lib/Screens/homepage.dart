@@ -109,8 +109,16 @@ class _HomePageState extends State<HomePage> {
                               ),
                               child: ListTile(
                                 leading: Checkbox(
-                                  value: false,
+                                  value: task.data().toString().contains('isDone')? task['isDone'] : false, 
                                   onChanged: (value) async {
+                                    await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(user.uid)
+                                    .collection('tasks')
+                                    .doc(task.id)
+                                    .update({
+                                      'isDone' : value,
+                                    });
                                     bool? confirm = await showDialog(
                                       context: context,
                                       builder: (context) {
