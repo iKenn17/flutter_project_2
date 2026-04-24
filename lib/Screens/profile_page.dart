@@ -42,21 +42,49 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> saveChanges() async {
     try {
+      bool needsReauth =
+          emailController.text.trim() != user?.email ||
+          passwordController.text.trim().isNotEmpty;
+
+      if (needsReauth) {
+        if (currentPasswordController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Enter current password")),
+          );
+          return;
+        }
+
+        await reauthenticate();
+      }
+
       if (nameController.text.trim() != user?.displayName) {
         await user!.updateDisplayName(nameController.text.trim());
       }
 
       if (emailController.text.trim() != user?.email) {
-        await reauthenticate();
         await user!.verifyBeforeUpdateEmail(emailController.text.trim());
       }
 
       if (passwordController.text.trim().isNotEmpty) {
-        await reauthenticate();
         await user!.updatePassword(passwordController.text.trim());
+
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
+        );
+
+        return;
       }
 
       await user!.reload();
+
+      passwordController.clear();
+      currentPasswordController.clear();
 
       setState(() {
         isEditing = false;
@@ -82,9 +110,37 @@ class _ProfilePageState extends State<ProfilePage> {
       controller: controller,
       obscureText: obscure,
       enabled: enabled,
+      style: const TextStyle(
+        color: Colors.black,
+        fontSize: 16,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        border: const OutlineInputBorder(),
+        labelStyle: const TextStyle(
+          color: Colors.black54,
+          fontSize: 14,
+        ),
+        filled: true,
+        fillColor: const Color.fromARGB(255, 235, 225, 210),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 16,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            color: Color.fromARGB(255, 40, 33, 31),
+            width: 2,
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }
@@ -92,96 +148,92 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: const Color.fromARGB(255, 204, 193, 177),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 40, 33, 31),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 40, 33, 31),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(3.0),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey,
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 150),
+              Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 40, 33, 31),
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(3.0),
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.grey,
+                        child: Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (isEditing) {
+                    saveChanges();
+                  } else {
+                    setState(() {
+                      isEditing = true;
+                    });
+                  }
+                },
+                child: Text(
+                  isEditing ? "Save" : "Edit Profile",
+                  style: const TextStyle(color: Colors.blue),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: () {
-                if (isEditing) {
-                  saveChanges();
-                } else {
-                  setState(() {
-                    isEditing = true;
-                  });
-                }
-              },
-              child: Text(isEditing ? "Save" : "Edit Profile",
-              style: TextStyle(
-                color: Colors.blue
-              ),),
-            ),
-
-            const SizedBox(height: 20),
-
-            buildField(
-              label: "Name",
-              controller: nameController,
-              enabled: isEditing,
-            ),
-            const SizedBox(height: 10),
-
-            buildField(
-              label: "Email",
-              controller: emailController,
-              enabled: isEditing,
-            ),
-            const SizedBox(height: 10),
-
-            if (isEditing)
-              buildField(
-                label: "New Password",
-                controller: passwordController,
-                obscure: true,
-                enabled: true,
               ),
-
-            if (isEditing)
+              const SizedBox(height: 20),
+              buildField(
+                label: "Name",
+                controller: nameController,
+                enabled: isEditing,
+              ),
+              const SizedBox(height: 20),
+              buildField(
+                label: "Email",
+                controller: emailController,
+                enabled: isEditing,
+              ),
               const SizedBox(height: 10),
-
-            if (isEditing)
-              buildField(
-                label: "Current Password",
-                controller: currentPasswordController,
-                obscure: true,
-                enabled: true,
-              ),
-
-            const SizedBox(height: 20),
-
-            
-          ],
+              if (isEditing)
+                buildField(
+                  label: "New Password",
+                  controller: passwordController,
+                  obscure: true,
+                  enabled: true,
+                ),
+              if (isEditing) const SizedBox(height: 10),
+              if (isEditing)
+                buildField(
+                  label: "Current Password",
+                  controller: currentPasswordController,
+                  obscure: true,
+                  enabled: true,
+                ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

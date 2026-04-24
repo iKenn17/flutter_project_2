@@ -5,6 +5,7 @@ import '../models/task.dart';
 import 'profile_page.dart';
 import 'settings_page.dart';
 import '../services/firestore_service.dart';
+import '../services/notification_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,6 +25,8 @@ class _HomePageState extends State<HomePage> {
     DateTime date = timestamp.toDate();
     return "${date.year}-${date.month}-${date.day} ${date.hour}:${date.minute}";
   }
+
+  String searchQuery = "";
 
   @override
   Widget build(BuildContext context) {
@@ -91,13 +94,18 @@ class _HomePageState extends State<HomePage> {
                           return const Center(child: Text("No tasks yet"));
                         }
 
-                        var tasks = snapshot.data!.docs;
+                        var allTasks = snapshot.data!.docs;
+
+                        var filteredTasks = allTasks.where((task) {
+                          String title = task['title'].toString().toLowerCase();
+                          return title.contains(searchQuery);
+                        }).toList();
 
                         return ListView.builder(
                           padding: const EdgeInsets.all(8.0),
-                          itemCount: tasks.length,
+                          itemCount: filteredTasks.length,
                           itemBuilder: (context, index) {
-                            var task = tasks[index];
+                            var task = filteredTasks[index];
 
                             return Container(
                               margin:
@@ -289,13 +297,21 @@ class _HomePageState extends State<HomePage> {
                                                 ),
                                               ),
                                               onPressed: () async {
-                                                String taskTitle =
-                                                    titleController.text;
+                                                String taskTitle = titleController.text;
 
                                                 if (taskTitle.isNotEmpty) {
-                                                  await firestoreService
-                                                      .addTask(taskTitle,
-                                                          reminderDate);
+                                                  await firestoreService.addTask(taskTitle, reminderDate);
+
+    
+                                                  if (reminderDate != null) {
+                                                    NotificationService.scheduleNotification(
+                                                      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                                                      title: "Task Reminder",
+                                                      body: taskTitle,
+                                                      scheduledDate: reminderDate!,
+                                                    );
+                                                  }
+
                                                   reminderDate = null;
                                                   Navigator.pop(context);
                                                 }
@@ -328,14 +344,18 @@ class _HomePageState extends State<HomePage> {
                     child: SizedBox(
                       height: 50,
                       child: TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value.toLowerCase();
+                          });
+                        },
                         decoration: InputDecoration(
                           hintText: 'Search...',
                           prefixIcon: const Icon(Icons.search),
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(25),
+                            borderRadius: BorderRadius.circular(25),
                             borderSide: BorderSide.none,
                           ),
                         ),
