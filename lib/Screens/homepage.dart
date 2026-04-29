@@ -53,10 +53,7 @@ class _HomePageState extends State<HomePage> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'User',
-                child: Text('User'),
-              ),
+              const PopupMenuItem<String>(value: 'User', child: Text('User')),
               const PopupMenuItem<String>(
                 value: 'Settings',
                 child: Text('Settings'),
@@ -64,10 +61,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ],
-        title: const Text(
-          'Questifie',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Questifie', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 40, 33, 31),
       ),
@@ -80,17 +74,20 @@ class _HomePageState extends State<HomePage> {
                     child: StreamBuilder<QuerySnapshot>(
                       stream: firestoreService.getTasks(user.uid),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
 
                         if (snapshot.hasError) {
                           return Center(
-                              child: Text("Error: ${snapshot.error}"));
+                            child: Text("Error: ${snapshot.error}"),
+                          );
                         }
 
-                        if (!snapshot.hasData ||
-                            snapshot.data!.docs.isEmpty) {
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                           return const Center(child: Text("No tasks yet"));
                         }
 
@@ -108,8 +105,7 @@ class _HomePageState extends State<HomePage> {
                             var task = filteredTasks[index];
 
                             return Container(
-                              margin:
-                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              margin: const EdgeInsets.symmetric(vertical: 4.0),
                               padding: const EdgeInsets.all(8.0),
                               decoration: BoxDecoration(
                                 color: const Color.fromARGB(255, 40, 33, 31),
@@ -117,29 +113,34 @@ class _HomePageState extends State<HomePage> {
                               ),
                               child: ListTile(
                                 leading: Checkbox(
-                                  value: task.data().toString().contains('isDone')? task['isDone'] : false, 
+                                  value:
+                                      task.data().toString().contains('isDone')
+                                      ? task['isDone']
+                                      : false,
                                   onChanged: (value) async {
                                     await FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(user.uid)
-                                    .collection('tasks')
-                                    .doc(task.id)
-                                    .update({
-                                      'isDone' : value,
-                                    });
+                                        .collection('users')
+                                        .doc(user.uid)
+                                        .collection('tasks')
+                                        .doc(task.id)
+                                        .update({'isDone': value});
                                     bool? confirm = await showDialog(
                                       context: context,
                                       builder: (context) {
                                         return AlertDialog(
                                           title: const Text("Complete Task"),
-                                          content: const Text("Mark this task as done?"),
+                                          content: const Text(
+                                            "Mark this task as done?",
+                                          ),
                                           actions: [
                                             TextButton(
-                                              onPressed: () => Navigator.pop(context, false),
-                                                child: const Text("Cancel"),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, false),
+                                              child: const Text("Cancel"),
                                             ),
                                             TextButton(
-                                              onPressed: () => Navigator.pop(context, true),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, true),
                                               child: const Text("Yes"),
                                             ),
                                           ],
@@ -148,7 +149,9 @@ class _HomePageState extends State<HomePage> {
                                     );
 
                                     if (confirm == true) {
-                                      await firestoreService.deleteTask(task.id);
+                                      await firestoreService.deleteTask(
+                                        task.id,
+                                      );
                                     }
                                   },
                                 ),
@@ -157,11 +160,13 @@ class _HomePageState extends State<HomePage> {
                                   style: const TextStyle(color: Colors.white),
                                 ),
                                 subtitle: task['reminder'] != null
-                                  ? Text(
-                                    "Reminder: ${formatDate(task['reminder'] as Timestamp)}",
-                                    style: const TextStyle(color: Colors.white70),
-                                  )
-                                : null,
+                                    ? Text(
+                                        "Reminder: ${formatDate(task['reminder'] as Timestamp)}",
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                        ),
+                                      )
+                                    : null,
                               ),
                             );
                           },
@@ -171,14 +176,15 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 2),
+                      horizontal: 16.0,
+                      vertical: 2,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color:
-                                const Color.fromARGB(255, 40, 33, 31),
+                            color: const Color.fromARGB(255, 40, 33, 31),
                             borderRadius: BorderRadius.circular(35),
                           ),
                           padding: const EdgeInsets.all(8),
@@ -191,11 +197,14 @@ class _HomePageState extends State<HomePage> {
                                 context: context,
                                 builder: (context) {
                                   return AlertDialog(
-                                    backgroundColor:
-                                        const Color.fromARGB(255, 40, 33, 31),
+                                    backgroundColor: const Color.fromARGB(
+                                      255,
+                                      40,
+                                      33,
+                                      31,
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
                                     content: Column(
                                       mainAxisSize: MainAxisSize.min,
@@ -221,9 +230,12 @@ class _HomePageState extends State<HomePage> {
                                               fontSize: 14,
                                             ),
                                             filled: true,
-                                            fillColor:
-                                                const Color.fromARGB(
-                                                    255, 204, 193, 177),
+                                            fillColor: const Color.fromARGB(
+                                              255,
+                                              204,
+                                              193,
+                                              177,
+                                            ),
                                             border: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(25),
@@ -234,33 +246,32 @@ class _HomePageState extends State<HomePage> {
                                         const SizedBox(height: 20),
                                         Row(
                                           mainAxisAlignment:
-                                              MainAxisAlignment
-                                                  .spaceBetween,
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                  fixedSize:
-                                                      const Size(120, 20),
-                                                  padding:
-                                                      const EdgeInsets.all(
-                                                          5)),
+                                                fixedSize: const Size(120, 20),
+                                                padding: const EdgeInsets.all(
+                                                  5,
+                                                ),
+                                              ),
                                               onPressed: () async {
                                                 DateTime? date =
                                                     await showDatePicker(
-                                                  context: context,
-                                                  initialDate:
-                                                      DateTime.now(),
-                                                  firstDate: DateTime(2024),
-                                                  lastDate: DateTime(2100),
-                                                );
+                                                      context: context,
+                                                      initialDate:
+                                                          DateTime.now(),
+                                                      firstDate: DateTime(2024),
+                                                      lastDate: DateTime(2100),
+                                                    );
 
                                                 if (date != null) {
                                                   TimeOfDay? time =
                                                       await showTimePicker(
-                                                    context: context,
-                                                    initialTime:
-                                                        TimeOfDay.now(),
-                                                  );
+                                                        context: context,
+                                                        initialTime:
+                                                            TimeOfDay.now(),
+                                                      );
 
                                                   if (time != null) {
                                                     reminderDate = DateTime(
@@ -283,32 +294,35 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                             const SizedBox(width: 30),
                                             ElevatedButton(
-                                              style:
-                                                  ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Colors.white,
-                                                foregroundColor:
-                                                    Colors.blue,
-                                                shape:
-                                                    RoundedRectangleBorder(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.white,
+                                                foregroundColor: Colors.blue,
+                                                shape: RoundedRectangleBorder(
                                                   borderRadius:
-                                                      BorderRadius
-                                                          .circular(20),
+                                                      BorderRadius.circular(20),
                                                 ),
                                               ),
                                               onPressed: () async {
-                                                String taskTitle = titleController.text;
+                                                String taskTitle =
+                                                    titleController.text;
 
                                                 if (taskTitle.isNotEmpty) {
-                                                  await firestoreService.addTask(taskTitle, reminderDate);
+                                                  await firestoreService
+                                                      .addTask(
+                                                        taskTitle,
+                                                        reminderDate,
+                                                      );
 
-    
                                                   if (reminderDate != null) {
                                                     NotificationService.scheduleNotification(
-                                                      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                                                      id:
+                                                          DateTime.now()
+                                                              .millisecondsSinceEpoch ~/
+                                                          1000,
                                                       title: "Task Reminder",
                                                       body: taskTitle,
-                                                      scheduledDate: reminderDate!,
+                                                      scheduledDate:
+                                                          reminderDate!,
                                                     );
                                                   }
 
@@ -318,29 +332,28 @@ class _HomePageState extends State<HomePage> {
                                               },
                                               child: const Text(
                                                 "Add Task",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                ),
+                                                style: TextStyle(fontSize: 12),
                                               ),
                                             ),
                                           ],
-                                        )
+                                        ),
                                       ],
                                     ),
                                   );
                                 },
                               );
                             },
-                            icon: const Icon(Icons.add,
-                                color: Colors.white),
+                            icon: const Icon(Icons.add, color: Colors.white),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 12.0),
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
                     child: SizedBox(
                       height: 50,
                       child: TextField(
