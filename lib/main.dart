@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'Screens/splash_screen.dart';
+import 'Screens/login_page.dart';
 import 'package:questifie_app/services/notification_service.dart';
 
 void main() async {
@@ -23,13 +23,9 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        appBarTheme: AppBarTheme(
-          iconTheme: IconThemeData(
-            color: Colors.white
-          ),
-        ),
+        appBarTheme: AppBarTheme(iconTheme: IconThemeData(color: Colors.white)),
       ),
-      home: const SplashScreen(),
+      home: const LoginPage(),
     );
   }
 }
