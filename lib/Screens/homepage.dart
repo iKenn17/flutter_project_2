@@ -23,7 +23,11 @@ class _HomePageState extends State<HomePage> {
 
   String formatDate(Timestamp timestamp) {
     DateTime date = timestamp.toDate();
-    return "${date.year}-${date.month}-${date.day} ${date.hour}:${date.minute}";
+    int hour = date.hour;
+    String minutes = date.minute.toString().padLeft(2, '0');
+    String period = hour >= 12 ? 'PM' : 'AM';
+    int hour12 = hour % 12 == 0 ? 12 : hour % 12;
+    return "${date.year}-${date.month}-${date.day} $hour12:$minutes $period";
   }
 
   String searchQuery = "";
@@ -112,6 +116,14 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
+                                  vertical: 0,
+                                ),
+                                visualDensity: const VisualDensity(
+                                  horizontal: 0,
+                                  vertical: -4,
+                                ),
                                 leading: Checkbox(
                                   value:
                                       task.data().toString().contains('isDone')
