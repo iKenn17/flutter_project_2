@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'login_page.dart';
 import '../services/notification_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -14,7 +13,9 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool notificationsEnabled = false;
-  final FirebaseAuth auth = FirebaseAuth.instance;
+
+  static const darkBrown = Color.fromARGB(255, 40, 33, 31);
+  static const warmBeige = Color.fromARGB(255, 204, 193, 177);
 
   @override
   void initState() {
@@ -37,7 +38,6 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> onToggleChanged(bool value) async {
     if (value) {
       final status = await Permission.notification.request();
-
       if (status.isDenied || status.isPermanentlyDenied) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -55,52 +55,118 @@ class _SettingsPageState extends State<SettingsPage> {
     await saveToggle(value);
   }
 
-  Future<void> logout(BuildContext context) async {
-    await auth.signOut();
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => LoginPage()),
-        (route) => false,
-      );
-    }
+  Future<void> logout() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: warmBeige,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Log Out',
+          style: TextStyle(color: darkBrown, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to log out?',
+          style: TextStyle(color: darkBrown),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: darkBrown)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: darkBrown,
+              foregroundColor: warmBeige,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              logout();
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 204, 193, 177),
+      backgroundColor: warmBeige,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 40, 33, 31),
+        backgroundColor: darkBrown,
+        foregroundColor: Colors.white,
         title: const Text("Settings", style: TextStyle(color: Colors.white)),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              children: [
-                SwitchListTile(
-                  title: const Text(
-                    "Enable Notifications:",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Notifications tile
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                title: const Text(
+                  "Enable Notifications",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: darkBrown,
                   ),
-                  value: notificationsEnabled,
-                  onChanged: onToggleChanged,
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () async => await logout(context),
-                      child: const Text("Log out"),
-                    ),
-                  ],
+                secondary: const Icon(
+                  Icons.notifications_outlined,
+                  color: darkBrown,
                 ),
-              ],
+                value: notificationsEnabled,
+                activeColor: darkBrown,
+                onChanged: onToggleChanged,
+              ),
             ),
-          ),
-        ],
+
+            const Spacer(),
+
+            // Logout button pinned to bottom
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _showLogoutDialog,
+                icon: const Icon(Icons.logout),
+                label: const Text(
+                  "Log Out",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: darkBrown,
+                  foregroundColor: warmBeige,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 3,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

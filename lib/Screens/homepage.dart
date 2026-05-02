@@ -42,6 +42,15 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         actions: [
           PopupMenuButton<String>(
+            color: const Color.fromARGB(
+              255,
+              40,
+              33,
+              31,
+            ), // dark brown background
+            elevation: 8,
+            borderRadius: BorderRadius.circular(12),
+            offset: const Offset(0, 40),
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: (String value) {
               if (value == 'User') {
@@ -57,10 +66,46 @@ class _HomePageState extends State<HomePage> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(value: 'User', child: Text('User')),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
+                value: 'User',
+                child: Row(
+                  children: const [
+                    Icon(
+                      Icons.person_outline,
+                      color: Color.fromARGB(255, 204, 193, 177),
+                      size: 20,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'User',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 204, 193, 177),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(), // subtle separator line
+              PopupMenuItem<String>(
                 value: 'Settings',
-                child: Text('Settings'),
+                child: Row(
+                  children: const [
+                    Icon(
+                      Icons.settings_outlined,
+                      color: Color.fromARGB(255, 204, 193, 177),
+                      size: 20,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'Settings',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 204, 193, 177),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
