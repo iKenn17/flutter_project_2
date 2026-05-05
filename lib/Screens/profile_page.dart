@@ -72,11 +72,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (!mounted) return;
 
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/login',
-          (route) => false,
-        );
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
 
         return;
       }
@@ -90,13 +86,13 @@ class _ProfilePageState extends State<ProfilePage> {
         isEditing = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile Updated")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Profile Updated")));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -110,16 +106,10 @@ class _ProfilePageState extends State<ProfilePage> {
       controller: controller,
       obscureText: obscure,
       enabled: enabled,
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 16,
-      ),
+      style: const TextStyle(color: Colors.black, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(
-          color: Colors.black54,
-          fontSize: 14,
-        ),
+        labelStyle: const TextStyle(color: Colors.black54, fontSize: 14),
         filled: true,
         fillColor: const Color.fromARGB(255, 235, 225, 210),
         contentPadding: const EdgeInsets.symmetric(
@@ -152,6 +142,7 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: const Color.fromARGB(255, 204, 193, 177),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 40, 33, 31),
+        foregroundColor: Colors.white,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

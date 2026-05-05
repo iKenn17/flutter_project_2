@@ -4,11 +4,19 @@ import 'package:flutter/material.dart';
 import 'Screens/login_page.dart';
 import 'Screens/homepage.dart';
 import 'package:questifie_app/services/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+Future<void> requestNotificationPermission() async {
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationService.init();
+  await requestNotificationPermission();
   runApp(const MyApp());
 }
 
@@ -24,9 +32,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        appBarTheme: AppBarTheme(iconTheme: IconThemeData(color: Colors.white)),
-      ),
+      routes: {'/login': (context) => const LoginPage()},
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

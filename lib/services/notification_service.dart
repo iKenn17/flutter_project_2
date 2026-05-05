@@ -10,12 +10,14 @@ class NotificationService {
   static Future<void> init() async {
     // Fix: use tzData alias to avoid conflict with tz alias
     tzData.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Manila'));
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initSettings =
-        InitializationSettings(android: androidSettings);
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidSettings,
+    );
 
     await notificationsPlugin.initialize(initSettings);
   }
@@ -41,22 +43,22 @@ class NotificationService {
     if (scheduledDate.isBefore(DateTime.now())) return;
 
     await notificationsPlugin.zonedSchedule(
-  id,
-  title,
-  body,
-  tz.TZDateTime.from(scheduledDate, tz.local),
-  const NotificationDetails(
-    android: AndroidNotificationDetails(
-      'task_channel',
-      'Task Reminders',
-      channelDescription: 'Notification channel for task reminders',
-      importance: Importance.max,
-      priority: Priority.high,
-    ),
-  ),
-  androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-  uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime, // ← add this back
-);
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledDate, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'task_channel',
+          'Task Reminders',
+          channelDescription: 'Notification channel for task reminders',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime, // ← add this back
+    );
   }
 }
