@@ -15,6 +15,7 @@ Future<void> requestNotificationPermission() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   await NotificationService.init();
   await requestNotificationPermission();
   runApp(const MyApp());
