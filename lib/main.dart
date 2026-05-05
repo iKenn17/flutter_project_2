@@ -14,7 +14,19 @@ Future<void> requestNotificationPermission() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyCxcTmfXvcPdXpHYv3fBHW2wloEPQ-AY4c',
+        appId: '1:232979945221:android:11715f7ae0c20818bf496c',
+        messagingSenderId: '232979945221',
+        projectId: 'questifie-app',
+        storageBucket: 'questifie-app.firebasestorage.app',
+      ),
+    );
+  } catch (e) {
+    print('Firebase init failed: $e');
+  }
   await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   await NotificationService.init();
   await requestNotificationPermission();
