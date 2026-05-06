@@ -1,46 +1,89 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzData;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/material.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  // INIT
   static Future<void> init() async {
-    // Fix: use tzData alias to avoid conflict with tz alias
     tzData.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Manila'));
 
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
+    await notificationsPlugin.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
     );
 
-    await notificationsPlugin.initialize(initSettings);
+    await _createNotificationChannel();
+    await _requestExactAlarmPermission();
+    await _requestBatteryOptimization();
   }
 
-  // CANCEL NOTIFICATION
+  static Future<void> _createNotificationChannel() async {
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+        notificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        'task_channel',
+        'Task Reminders',
+        description: 'Notification channel for task reminders',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+
+    debugPrint('✅ Notification channel created');
+  }
+
+  static Future<void> _requestExactAlarmPermission() async {
+    final status = await Permission.scheduleExactAlarm.status;
+    if (!status.isGranted) {
+      final result = await Permission.scheduleExactAlarm.request();
+      debugPrint('✅ Exact alarm permission: $result');
+    } else {
+      debugPrint('✅ Exact alarm already granted');
+    }
+  }
+
+  static Future<void> _requestBatteryOptimization() async {
+    final status = await Permission.ignoreBatteryOptimizations.status;
+    if (!status.isGranted) {
+      final result = await Permission.ignoreBatteryOptimizations.request();
+      debugPrint('✅ Battery optimization exemption: $result');
+    } else {
+      debugPrint('✅ Battery optimization already exempted');
+    }
+  }
+
   static Future<void> cancelNotification(int id) async {
     await notificationsPlugin.cancel(id);
   }
 
-  // CANCEL ALL NOTIFICATIONS
   static Future<void> cancelAllNotifications() async {
     await notificationsPlugin.cancelAll();
   }
 
-  // SCHEDULE NOTIFICATION
   static Future<void> scheduleNotification({
     required int id,
     required String title,
     required String body,
     required DateTime scheduledDate,
   }) async {
-    // Don't schedule if date is in the past
-    if (scheduledDate.isBefore(DateTime.now())) return;
+    if (scheduledDate.isBefore(DateTime.now())) {
+      debugPrint('❌ Skipped — date is in the past: $scheduledDate');
+      return;
+    }
+
+    debugPrint('✅ Scheduling notification for: $scheduledDate');
 
     await notificationsPlugin.zonedSchedule(
       id,
@@ -61,7 +104,9 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime, // ← add this back
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
+
+    debugPrint('✅ Notification scheduled successfully');
   }
 }
