@@ -15,15 +15,17 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool notificationsEnabled = false;
 
+  // Shared colors used throughout the page
   static const darkBrown = Color.fromARGB(255, 40, 33, 31);
   static const warmBeige = Color.fromARGB(255, 204, 193, 177);
 
   @override
   void initState() {
     super.initState();
-    loadToggle();
+    loadToggle(); // Load saved notification setting on startup
   }
 
+  // Reads the saved notification toggle value from local storage
   Future<void> loadToggle() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -31,24 +33,30 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  // Saves the current toggle value to local storage
   Future<void> saveToggle(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications', value);
   }
 
+  // Called when the user flips the notification switch
   Future<void> onToggleChanged(bool value) async {
     if (value) {
+      // Ask for notification permission when enabling
       final status = await Permission.notification.request();
+
       if (status.isDenied || status.isPermanentlyDenied) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Notification permission denied.')),
           );
+          // If permanently denied, open system settings so the user can fix it
           if (status.isPermanentlyDenied) openAppSettings();
         }
         return;
       }
     } else {
+      // Cancel all scheduled notifications when disabling
       await NotificationService.cancelAllNotifications();
     }
 
@@ -56,10 +64,12 @@ class _SettingsPageState extends State<SettingsPage> {
     await saveToggle(value);
   }
 
+  // Signs the user out of Firebase
   Future<void> logout() async {
     await FirebaseAuth.instance.signOut();
   }
 
+  // Shows a confirmation dialog before logging out
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -88,12 +98,14 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             onPressed: () async {
-              Navigator.pop(ctx); // close dialog
+              Navigator.pop(ctx); // Close the dialog first
               await FirebaseAuth.instance.signOut();
+
               if (mounted) {
+                // Go to login and clear the entire navigation stack
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginPage()),
-                  (route) => false, // ✅ clears entire navigation stack
+                  (route) => false,
                 );
               }
             },
@@ -118,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Notifications tile
+            // Toggle for enabling/disabling notifications
             Container(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.35),
@@ -149,7 +161,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const Spacer(),
 
-            // Logout button pinned to bottom
+            // Log out button pinned to the bottom of the screen
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

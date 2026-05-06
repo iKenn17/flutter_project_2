@@ -6,8 +6,10 @@ import 'package:questifie_app/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
+  // Makes sure Flutter is ready before doing anything
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Connect the app to Firebase using project credentials
   await Firebase.initializeApp(
     options: const FirebaseOptions(
       apiKey: 'AIzaSyCxcTmfXvcPdXpHYv3fBHW2wloEPQ-AY4c',
@@ -18,16 +20,19 @@ void main() async {
     ),
   );
 
+  // Set up notifications, and ignore errors if it fails
   try {
     await NotificationService.init();
   } catch (e) {
     debugPrint('Notification init error: $e');
   }
 
+  // Ask the user for notification permission if not yet granted
   if (await Permission.notification.isDenied) {
     await Permission.notification.request();
   }
 
+  // Start the app
   runApp(const MyApp());
 }
 
@@ -37,9 +42,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      routes: {'/login': (context) => const LoginPage()},
-      home: const SplashScreen(),
+      debugShowCheckedModeBanner: false, // Hides the debug banner on screen
+      routes: {
+        '/login': (context) => const LoginPage(),
+      }, // Named route for login
+      home: const SplashScreen(), // First screen shown when app opens
     );
   }
 }

@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
-
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -12,66 +11,76 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
+
+  // Controllers for each input field
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmedpasswordController = TextEditingController();
-  bool _isObscured1 = true;
-  bool _isObscured2 = true;
+  final TextEditingController confirmedpasswordController =
+      TextEditingController();
+
+  bool _isObscured1 = true; // Controls visibility of password field
+  bool _isObscured2 = true; // Controls visibility of confirm password field
   String? errorMessage;
 
-  
-
+  // Handles the sign up process
   Future<void> signup() async {
-  try {
-    if (passwordController.text.trim() != confirmedpasswordController.text.trim()) {
+    try {
+      // Check if both passwords match before proceeding
+      if (passwordController.text.trim() !=
+          confirmedpasswordController.text.trim()) {
+        setState(() {
+          errorMessage = "Passwords do not match";
+        });
+        return;
+      }
+
+      showLoadingDialog(context, "Signing up...");
+
+      // Create a new Firebase Auth account
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      // Save the user's info to Firestore under their UID
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+            'name': nameController.text.trim(),
+            'email': emailController.text.trim(),
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+      // Also set the display name on the Firebase Auth profile
+      await userCredential.user!.updateDisplayName(nameController.text.trim());
+
+      // Close the loading dialog
+      Navigator.pop(context);
+
+      // Go to login page and clear the navigation stack
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+        (route) => false,
+      );
+    } catch (error) {
+      // Close the loading dialog and show the error
+      Navigator.pop(context);
       setState(() {
-        errorMessage = "Passwords do not match";
+        errorMessage = error.toString();
       });
-      return;
     }
-
-    showLoadingDialog(context, "Signing up...");
-
-    UserCredential userCredential = await auth.createUserWithEmailAndPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-
-    
-    await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-      'name': nameController.text.trim(),
-      'email': emailController.text.trim(),
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    
-    await userCredential.user!.updateDisplayName(nameController.text.trim());
-
-    Navigator.pop(context);
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-      (route) => false,
-    );
-
-  } catch (error) {
-    Navigator.pop(context);
-    setState(() {
-      errorMessage = error.toString();
-    });
   }
-}
 
-
+  // Shows a loading spinner dialog while signup is in progress
   void showLoadingDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Prevents dismissing by tapping outside
       builder: (context) => Dialog(
         child: Padding(
           padding: const EdgeInsetsGeometry.all(20),
@@ -82,21 +91,18 @@ class _SignupPageState extends State<SignupPage> {
               const SizedBox(width: 20),
               Text(message),
             ],
-          )),
+          ),
+        ),
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 40, 33, 31),
-        title: Text('Questifie',
-        style: TextStyle(
-          color: Colors.white,
-        )),
+        title: Text('Questifie', style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       backgroundColor: Color.fromARGB(255, 204, 193, 177),
@@ -104,30 +110,36 @@ class _SignupPageState extends State<SignupPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // App logo
             SizedBox(
               height: 250,
-              child: Image.asset('assets/images/app_icon.png')
+              child: Image.asset('assets/images/app_icon.png'),
             ),
-            Text('SIGN UP',
+            Text(
+              'SIGN UP',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 23,
                 fontWeight: FontWeight.bold,
-            )),
+              ),
+            ),
             Padding(
               padding: EdgeInsets.all(36),
               child: Container(
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 40, 33, 31),
-                  borderRadius: BorderRadius.circular(15)
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Column(
                   children: [
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
+                      ),
                       child: Column(
                         children: [
-
+                          // Name input field
                           TextFormField(
                             controller: nameController,
                             keyboardType: TextInputType.name,
@@ -136,34 +148,33 @@ class _SignupPageState extends State<SignupPage> {
                               isDense: true,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               filled: true,
                               fillColor: Colors.white,
                               hintText: 'Enter Name...',
                               hintStyle: TextStyle(
                                 color: Colors.black,
-                                fontSize: 14
+                                fontSize: 14,
                               ),
-                              prefixIcon: Icon(Icons.person,
-                              color: Colors.black,
-                              size: 20,),
+                              prefixIcon: Icon(
+                                Icons.person,
+                                color: Colors.black,
+                                size: 20,
+                              ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(36)
-                              )
-                            ),                      
+                                borderRadius: BorderRadius.circular(36),
+                              ),
+                            ),
                           ),
 
                           const SizedBox(height: 20),
-                          
+
+                          // Email input field
                           TextFormField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -172,34 +183,33 @@ class _SignupPageState extends State<SignupPage> {
                               isDense: true,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               filled: true,
                               fillColor: Colors.white,
                               hintText: 'Enter Email...',
                               hintStyle: TextStyle(
                                 color: Colors.black,
-                                fontSize: 14
+                                fontSize: 14,
                               ),
-                              prefixIcon: Icon(Icons.email,
-                              color: Colors.black,
-                              size: 20,),
+                              prefixIcon: Icon(
+                                Icons.email,
+                                color: Colors.black,
+                                size: 20,
+                              ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(36)
-                              )
-                            ),                      
+                                borderRadius: BorderRadius.circular(36),
+                              ),
+                            ),
                           ),
 
                           const SizedBox(height: 20),
-                  
+
+                          // Password input field with show/hide toggle
                           TextFormField(
                             obscureText: _isObscured1,
                             controller: passwordController,
@@ -208,15 +218,11 @@ class _SignupPageState extends State<SignupPage> {
                               isDense: true,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               filled: true,
                               fillColor: Colors.white,
@@ -225,11 +231,17 @@ class _SignupPageState extends State<SignupPage> {
                                 color: Colors.black,
                                 fontSize: 14,
                               ),
-                              prefixIcon: Icon(Icons.password,
-                              color: Colors.black,
-                              size: 20,),
+                              prefixIcon: Icon(
+                                Icons.password,
+                                color: Colors.black,
+                                size: 20,
+                              ),
                               suffixIcon: IconButton(
-                                icon: Icon(_isObscured1 ? Icons.visibility : Icons.visibility_off),
+                                icon: Icon(
+                                  _isObscured1
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
                                 onPressed: () {
                                   setState(() {
                                     _isObscured1 = !_isObscured1;
@@ -237,14 +249,14 @@ class _SignupPageState extends State<SignupPage> {
                                 },
                               ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(36)
-                              )
+                                borderRadius: BorderRadius.circular(36),
+                              ),
                             ),
-
                           ),
 
                           SizedBox(height: 20),
 
+                          // Confirm password field with show/hide toggle
                           TextFormField(
                             obscureText: _isObscured2,
                             controller: confirmedpasswordController,
@@ -253,15 +265,11 @@ class _SignupPageState extends State<SignupPage> {
                               isDense: true,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(36),
-                                borderSide: BorderSide(
-                                  color: Colors.white
-                                )
+                                borderSide: BorderSide(color: Colors.white),
                               ),
                               filled: true,
                               fillColor: Colors.white,
@@ -270,14 +278,20 @@ class _SignupPageState extends State<SignupPage> {
                                 color: Colors.black,
                                 fontSize: 14,
                               ),
-                              prefixIcon: Icon(Icons.password,
-                              color: Colors.black,
-                              size: 20,),
+                              prefixIcon: Icon(
+                                Icons.password,
+                                color: Colors.black,
+                                size: 20,
+                              ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(36)
+                                borderRadius: BorderRadius.circular(36),
                               ),
                               suffixIcon: IconButton(
-                                icon: Icon(_isObscured2 ? Icons.visibility : Icons.visibility_off),
+                                icon: Icon(
+                                  _isObscured2
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
                                 onPressed: () {
                                   setState(() {
                                     _isObscured2 = !_isObscured2;
@@ -285,159 +299,60 @@ class _SignupPageState extends State<SignupPage> {
                                 },
                               ),
                             ),
-
                           ),
 
-                          
-
+                          // Link to go back to login if already has an account
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                            
                               TextButton(
                                 onPressed: () {
                                   Navigator.pushReplacement(
-                                    context, MaterialPageRoute(builder: (context) => LoginPage())
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LoginPage(),
+                                    ),
                                   );
                                 },
-                                child: Text('Already have an account?',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white
-                                ))
-                              )
+                                child: Text(
+                                  'Already have an account?',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
 
                           SizedBox(height: 0.5),
 
+                          // Sign up button
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               fixedSize: Size(80, 15),
-                              padding: EdgeInsets.all(0.5)
+                              padding: EdgeInsets.all(0.5),
                             ),
                             onPressed: signup,
-                            child: Text('SIGN UP',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 12
-                            ))
-                          )
-
+                            child: Text(
+                              'SIGN UP',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         ],
-                      )
-                    )
+                      ),
+                    ),
                   ],
-                )
-              )
-            )
-            /*
-            Padding(
-              padding: EdgeInsets.all(36),
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter Email',
-                      prefixIcon: Icon(Icons.email),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(36)
-                      ),
-                    ),
-
-                    onChanged: (String email) {
-                      
-                    },
-                    validator: (email) {
-                      if (email == null || email.isEmpty) {
-                        return "Enter Email";
-                      }
-                      return null;
-                    }
-                  ),
-
-                  SizedBox(height: 30),
-
-                  TextFormField(
-                    controller: passwordController,
-                    keyboardType: TextInputType.visiblePassword,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter Password',
-                      prefixIcon: Icon(Icons.password),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(36)
-                      ),
-                    ),
-
-                    onChanged: (String password) {
-                      
-                    },
-                    validator: (password) {
-                      if (password == null || password.isEmpty) {
-                        return "Enter Password";
-                      }
-                      return null;
-                    }
-                  ),
-
-                  SizedBox(height: 10),
-
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context, MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
-                            );
-                          },
-                          child: Text('Forgot Password?',
-                          style: TextStyle(
-                            color: Colors.black
-                          ))
-                        ),
-
-                        TextButton(
-                          onPressed: () {
-                             Navigator.push(
-                              context, MaterialPageRoute(builder: (context) => SignupPage()),
-                            );
-                          },
-                          child: Text('Create an Account',
-                          style: TextStyle(
-                            color: Colors.black
-                          ))
-                        )
-                      ],
-                    )),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 35),
-                    child: MaterialButton(
-                      onPressed: () => loginUser(context),
-                      color: Colors.brown,
-                      textColor: Colors.white,
-                      child: Text('Login'),
-                    ),
-                  )
-
-                ],
-              )
-            ) */
-
+                ),
+              ),
+            ),
           ],
-          
         ),
       ),
     );
-    
   }
 }

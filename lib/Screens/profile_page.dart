@@ -11,10 +11,12 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FirebaseAuth auth = FirebaseAuth.instance;
 
+  // Gets the currently logged-in user
   User? get user => auth.currentUser;
 
-  bool isEditing = false;
+  bool isEditing = false; // Tracks whether the user is in edit mode
 
+  // Controllers for each input field
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -23,10 +25,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    // Pre-fill fields with the current user's info
     nameController.text = user?.displayName ?? '';
     emailController.text = user?.email ?? '';
   }
 
+  // Re-verifies the user's identity before making sensitive changes
   Future<void> reauthenticate() async {
     final currentUser = auth.currentUser;
 
@@ -40,13 +44,16 @@ class _ProfilePageState extends State<ProfilePage> {
     await currentUser.reauthenticateWithCredential(credential);
   }
 
+  // Saves profile changes (name, email, or password)
   Future<void> saveChanges() async {
     try {
+      // Re-authentication is needed if email or password is being changed
       bool needsReauth =
           emailController.text.trim() != user?.email ||
           passwordController.text.trim().isNotEmpty;
 
       if (needsReauth) {
+        // Current password is required to proceed
         if (currentPasswordController.text.trim().isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Enter current password")),
@@ -57,10 +64,12 @@ class _ProfilePageState extends State<ProfilePage> {
         await reauthenticate();
       }
 
+      // Update name if it changed
       if (nameController.text.trim() != user?.displayName) {
         await user!.updateDisplayName(nameController.text.trim());
       }
 
+      // Send a verification email before updating the email address
       if (emailController.text.trim() != user?.email) {
         await user!.verifyBeforeUpdateEmail(emailController.text.trim());
       }
@@ -68,6 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (passwordController.text.trim().isNotEmpty) {
         await user!.updatePassword(passwordController.text.trim());
 
+        // Sign out after password change for security, then go to login
         await FirebaseAuth.instance.signOut();
 
         if (!mounted) return;
@@ -77,6 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
+      // Refresh user data and reset the form
       await user!.reload();
 
       passwordController.clear();
@@ -90,12 +101,14 @@ class _ProfilePageState extends State<ProfilePage> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Profile Updated")));
     } catch (e) {
+      // Show any errors to the user
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
+  // Reusable styled text field used for all profile inputs
   Widget buildField({
     required String label,
     required TextEditingController controller,
@@ -149,12 +162,15 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+            bottom: MediaQuery.of(
+              context,
+            ).viewInsets.bottom, // Avoid keyboard overlap
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 150),
+              // Profile avatar icon
               Stack(
                 alignment: Alignment.topCenter,
                 children: [
@@ -179,6 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
               const SizedBox(height: 20),
+              // Toggles between edit mode and saving changes
               ElevatedButton(
                 onPressed: () {
                   if (isEditing) {
@@ -207,6 +224,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 enabled: isEditing,
               ),
               const SizedBox(height: 10),
+              // Password fields only appear when editing
               if (isEditing)
                 buildField(
                   label: "New Password",

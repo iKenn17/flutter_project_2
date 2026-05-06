@@ -15,11 +15,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
-  bool _isObscured = true;
+  bool _isObscured = true; // Controls password visibility
   String? errorMessage;
 
+  // Handles the login process
   Future<void> login() async {
-    if (isLoading) return;
+    if (isLoading) return; // Prevent duplicate requests
 
     setState(() {
       isLoading = true;
@@ -27,6 +28,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // Attempt to sign in with a 10-second timeout
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(
             email: emailController.text.trim(),
@@ -36,15 +38,16 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // No manual navigation needed — StreamBuilder in HomePage handles routing
       setState(() => isLoading = false);
 
+      // Go to home page and clear the navigation stack
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomePage()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
+      // Show a friendly error message based on the error code
       String message;
 
       switch (e.code) {
@@ -75,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
+      // Catch any other unexpected errors
       setState(() {
         errorMessage = "Something went wrong";
         isLoading = false;
@@ -93,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // App logo
                 SizedBox(
                   height: 250,
                   child: Image.asset('assets/images/app_icon.png'),
@@ -121,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: Column(
                         children: [
-                          // Email field
+                          // Email input field (disabled while loading)
                           TextFormField(
                             controller: emailController,
                             enabled: !isLoading,
@@ -161,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 20),
 
-                          // Password field
+                          // Password input field with show/hide toggle
                           TextFormField(
                             controller: passwordController,
                             enabled: !isLoading,
@@ -207,6 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
 
+                          // Show error message below the fields if login fails
                           if (errorMessage != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
@@ -218,7 +224,7 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 5),
 
-                          // Forgot password & create account
+                          // Links for forgot password and account creation
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -257,14 +263,16 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 5),
 
-                          // Login button
+                          // Login button — shows a spinner while loading
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               fixedSize: const Size(80, 15),
                               padding: const EdgeInsets.all(0.5),
                             ),
-                            onPressed: isLoading ? null : login,
+                            onPressed: isLoading
+                                ? null
+                                : login, // Disabled while loading
                             child: isLoading
                                 ? const SizedBox(
                                     height: 15,
@@ -293,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Full-screen loading overlay
+          // Semi-transparent overlay shown on top of everything while loading
           if (isLoading)
             Container(
               color: Colors.black.withOpacity(0.3),
